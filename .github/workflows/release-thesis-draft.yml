@@ -1,0 +1,74 @@
+name: Create Minor Release on Push to main
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python (for version parsing)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Get Latest Tag
+        id: get_latest_tag
+        run: |
+          git fetch --tags
+          TAG=$(git tag --sort=-v:refname | head -n 1)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Determine Next Version
+        id: next_version
+        run: |
+          if [ -z "${{ steps.get_latest_tag.outputs.tag }}" ]; then
+            VERSION="0.1"
+          else
+            VERSION=$(echo "${{ steps.get_latest_tag.outputs.tag }}" | sed 's/^v//')
+            MAJOR=$(echo $VERSION | cut -d. -f1)
+            MINOR=$(echo $VERSION | cut -d. -f2)
+            if [ "$MAJOR" -eq 0 ]; then
+              # Latest tag is v0.x, increment minor version
+              NEW_MINOR=$((MINOR + 1))
+              VERSION="0.${NEW_MINOR}"
+            else
+              # Latest tag is vM.N (M >= 1), increment minor version
+              NEW_MINOR=$((MINOR + 1))
+              VERSION="${MAJOR}.${NEW_MINOR}"
+            fi
+          fi
+          echo "version=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Compile LaTeX Document
+        uses: xu-cheng/latex-action@v2
+        with:
+          root_file: main.tex
+          working_directory: Thesis
+
+      - name: Rename PDF with Date and DRF
+        id: rename_pdf
+        run: |
+          DATE=$(date '+%Y-%m-%d')
+          NEW_NAME="${DATE}-DRF-Thesis.pdf"
+          mkdir artifacts
+          cp Thesis/out/main.pdf artifacts/$NEW_NAME
+          echo "pdf_name=$NEW_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create Minor Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.next_version.outputs.version }}
+          name: "Draft - ${{ steps.next_version.outputs.version }}"
+          files: artifacts/${{ steps.rename_pdf.outputs.pdf_name }}
+          draft: false
+          prerelease: false
