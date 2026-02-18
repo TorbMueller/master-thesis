@@ -1,0 +1,658 @@
+\chapter{Analysis}
+\label{cha:analyse}
+
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, 
+sed diam nonumy eirmod tempor invidunt ut labore et dolore
+ magna aliquyam erat, sed diam voluptua. At vero eos et
+  accusam et justo duo dolores et ea rebum. Stet clita kasd 
+  gubergren, no sea takimata sanctus est Lorem ipsum dolor sit
+   amet. Lorem ipsum dolor sit amet, consetetur sadipscing
+    elitr, sed diam nonumy eirmod tempor invidunt ut labore
+     et dolore magna aliquyam erat, sed diam voluptua. 
+     At vero eos et accusam et justo duo dolores et ea rebum.
+      Stet clita kasd gubergren, no sea takimata sanctus est
+       Lorem ipsum dolor sit amet.
+\section{Ausgangssituation}
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, 
+sed diam nonumy eirmod tempor invidunt ut labore et dolore
+ magna aliquyam erat, sed diam voluptua. At vero eos et
+  accusam et justo duo dolores et ea rebum. Stet clita kasd 
+  gubergren, no sea takimata sanctus est Lorem ipsum dolor sit
+   amet. Lorem ipsum dolor sit amet, consetetur sadipscing
+    elitr, sed diam nonumy eirmod tempor invidunt ut labore
+     et dolore magna aliquyam erat, sed diam voluptua. 
+     At vero eos et accusam et justo duo dolores et ea rebum.
+      Stet clita kasd gubergren, no sea takimata sanctus est
+       Lorem ipsum dolor sit amet.
+
+
+
+\subsection{Probleme der aktuellen Infrastruktur}
+Die aktuelle Infrastruktur des hostings der Web-Apps zeigt mehrere signifikante Probleme, die eine Migration in eine moderne Cloud-Umgebung
+erforderlich machen. Ein wesentliches Problem ist die begrenzte Skalierbarkeit der bestehenden Umgebung, die aus zwei dedizierten Servern besteht.
+Diese Architektur stößt bei zunehmender Last schnell an ihre Grenzen, da eine horizontale Skalierung nur mit erheblichem Aufwand möglich ist.
+Zusätzliche Server müssen manuell bereitgestellt und in die bestehende Umgebung integriert werden. Das führt zu einer eingeschränkten Flexibilität -
+insbesondere bei plötzlichen Lastspitzen oder einem generellen Anstieg der Nutzung.
+
+Ein weiterer kritischer Punkt ist der hohe Wartungsaufwand, der durch die manuelle Verwaltung der Server entsteht. Regelmäßige Software-Updates, und
+die Überwachung der Systemressourcen erfordern umfassende Eingriffe und binden wertvolle personelle Ressourcen. Diese manuellen Prozesse erhöhen zudem
+die Wahrscheinlichkeit menschlicher Fehler, was die Zuverlässigkeit und Stabilität der gesamten Infrastruktur beeinträchtigen kann.
+
+Zusätzlich bietet die derzeitige Infrastruktur eine eingeschränkte Ausfallsicherheit. Da die Anwendungen ausschließlich auf zwei dedizierten Servern
+betrieben werden, fehlt es an einer umfassenden Redundanz. Der Ausfall eines Servers könnte zu signifikanten Unterbrechungen führen, da es keine
+integrierten Mechanismen gibt, die eine automatische Übernahme der Dienste ermöglichen. Besonders die produktive Umgebung ist dadurch potenziell
+anfällig für Ausfallzeiten, was die Verfügbarkeit und Verlässlichkeit der Anwendungen gefährdet.
+
+Ein weiteres Problem betrifft die Flexibilität bei Updates und Deployments. Obwohl die bestehende \ac{CI}/\ac{CD}-Pipeline mit GitHub Actions und
+einer internen Ablage für Container-Images eine gewisse Automatisierung bietet, erfordert das manuelle Ausführen der Befehle ``docker compose pull''
+und ``docker compose up -d'' nach wie vor menschliche Eingriffe auf den Servern. Dies kann zu Verzögerungen führen und erschwert schnelle und
+konsistente Deployments, da der Prozess nicht vollständig automatisiert ist.
+
+Die eingeschränkte Netzwerkintegration und die externe Erreichbarkeit stellen ebenfalls eine Herausforderung dar. Aktuell ist der Zugriff auf die
+Web-Apps ausschließlich auf das interne Netzwerk beschränkt. Das würde bei einer notwendigen Erweiterung der Zugänglichkeit zu erheblichen Anpassungen
+und potenziellen Sicherheitsrisiken führen. Die aktuelle Architektur ist nicht ausreichend darauf ausgelegt, die notwendigen Sicherheitsmaßnahmen zu
+implementieren, um eine sichere und dennoch flexible externe Erreichbarkeit zu ermöglichen.
+
+Zudem gibt es Sicherheitsbedenken, insbesondere in Bezug auf die Handhabung sensibler Konfigurationsdaten. Zwar werden die tatsächlichen Werte der
+`.env-Dateien` nicht in das Git-Repository gepusht, um die Vertraulichkeit zu wahren, jedoch besteht bei unsachgemäßer Handhabung oder durch
+menschliche Fehler weiterhin das Risiko einer versehentlichen Offenlegung. Die momentane Infrastruktur bietet nur begrenzte Unterstützung für
+erweiterte Sicherheitsmaßnahmen, wie sie in modernen Cloud-Umgebungen Standard sind, etwa automatisierte Überwachungs- und Schutzmechanismen.
+
+Ein abschließender Punkt betrifft die Kosten- und Ressourceneffizienz. Der Betrieb dedizierter Server verursacht konstante Kosten, unabhängig von der
+tatsächlichen Nutzung der Ressourcen. Diese feste Kostenstruktur kann zu ineffizienten Ausgaben führen, da eine dynamische Anpassung der Ressourcen an
+die tatsächliche Auslastung nicht möglich ist. Eine flexible On-Demand-Skalierung, wie sie in Cloud-Umgebungen Standard ist, kann die Effizienz und
+Wirtschaftlichkeit der Ressourcen deutlich verbessern - ein Konzept, das die bestehende Infrastruktur nicht leisten kann.
+\newpage
+\subsection{Ziel der Migration}
+\label{ssec:ziel_der_migration}
+
+Das Hauptziel der Migration besteht darin, die bestehende Infrastruktur zu modernisieren und eine zukunftssichere, skalierbare, leistungsstarke sowie
+kosteneffiziente Umgebung für das Web-Portal und die darin laufenden Anwendungen zu schaffen. Im Rahmen der Modernisierung sollen die folgenden
+zentralen Herausforderungen adressiert werden:
+
+\begin{itemize}
+      \item \textbf{Verbesserung der Skalierbarkeit}: Die aktuelle Infrastruktur stößt insbesondere bei Lastspitzen schnell an ihre Grenzen. Durch die
+            Migration in die Cloud soll eine flexible, bedarfsgesteuerte Skalierung ermöglicht werden, die eine schnelle Anpassung der Ressourcen an
+            die aktuelle Nutzungslast erlaubt. Dies gewährleistet eine stabile und performante Benutzererfahrung, auch bei starkem Zugriff.
+
+      \item \textbf{Erhöhung der Ausfallsicherheit und Verfügbarkeit}: Cloud-Umgebungen bieten umfangreiche Redundanz- und Hochverfügbarkeitslösungen
+            \cite{8604034}\cite{Riaz2018}. Automatische Failover-Mechanismen sowie geografisch verteilte Rechenzentren minimieren potenzielle
+            Ausfallzeiten und ermöglichen den kontinuierlichen Betrieb auch bei Serverausfällen oder Störungen \cite{Riaz2018}.
+
+      \item \textbf{Automatisierung und Effizienzsteigerung}: Durch die Verwendung von Konzepten wie GitOps kann der Deployment-Prozess umfassend
+            automatisiert werden. Dies reduziert den manuellen Aufwand, minimiert menschliche Fehler und beschleunigt die Bereitstellung neuer
+            Funktionen \cite{9565152}.
+
+      \item \textbf{Steigerung der Kosteneffizienz}: Im Gegensatz zu den festen Kosten für dedizierte Server bietet die Cloud flexible Abrechnungsmodelle
+            basierend auf der tatsächlichen Nutzung (Pay-as-you-go). Die automatische Anpassung der Ressourcen an den Bedarf verhindert
+            Überkapazitäten und steigert somit die Kosteneffizienz, da nur bezahlt wird, was auch genutzt wird. \cite{6009283}
+
+      \item \textbf{Verbesserung der Erreichbarkeit}: Während die bestehende Infrastruktur auf internen Zugriff beschränkt ist, ermöglicht die Cloud
+            eine externe Erreichbarkeit der Anwendungen.
+\end{itemize}
+
+Zusammenfassend soll die Migration die bestehenden Einschränkungen der aktuellen Infrastruktur überwinden und eine moderne, flexible und sichere
+Umgebung schaffen, die den wachsenden Anforderungen des Unternehmens gerecht wird.
+
+\section{Anforderungen an die zukünftige Infrastruktur}
+\label{sec:anforderungsanalyse}
+% Wichtig !!! Anforderungsanalyse nach folgendem Buch: https://www.sophist.de/publikationen/requirements-engineering-und-management/ LIV:
+% https://bsz.ibs-bw.de/aDISWeb/app;jsessionid=DE11A9B8B156B28F0E43F3B61CC56A91 Webseite zu Buch:
+% https://www.hanser-elibrary.com/doi/book/10.3139/9783446464308 PDF: https://www.hanser-elibrary.com/doi/epdf/10.3139/9783446464308
+
+Das folgende Kapitel orientiert sich am Verfahren von Rupp\cite{Rupp2021}. Im Rahmen dieser Arbeit wird bei der Anforderungsanalyse gemäß
+\cite[Kap.~16.3.1]{Rupp2021} eine natürlichsprachliche Anforderungsspezifikation gewählt, um eine bessere Verständlichkeit zu gewährleisten. Zur
+Darstellung der Anforderungen kommt die Use-Case-basierte Analyse gemäß \cite[Kap.~18.2.1]{Rupp2021} zum Einsatz. Diese Methode erfasst klare
+Anwendungsfälle in einem ablauforientierten Kontext und ermöglicht eine strukturierte Darstellung der relevanten Prozesse im Migrationsprojekt.
+
+Die Anforderungsanalyse dient dazu, die funktionalen Anforderungen, wie zum Beispiel die spezifischen Skalierbarkeits- oder Sicherheitsanforderungen
+der neuen Infrastruktur, sowie die nicht-funktionalen Anforderungen, wie Verfügbarkeit und Performanz, systematisch zu erfassen und zu dokumentieren.
+Sie bildet damit die Grundlage für die Konzeption der Zielarchitektur und deren Implementierungsschritte im Migrationsprozess.
+
+Die einzelnen Anforderungen werden dabei nach der in \cite[Kap.~19.3]{Rupp2021} beschriebenen Schablone erstellt, um eine konsistente und einheitliche
+Dokumentation sicherzustellen. Diese Schablone definiert eine standardisierte Struktur, die alle relevanten Aspekte einer Anforderung - wie die
+Bedingungen, das betroffene System, die Funktionalität und das Zielobjekt - präzise und nachvollziehbar beschreibt. Durch die Nutzung der Schablone
+wird sichergestellt, dass alle Anforderungen vollständig und ohne Missverständnisse formuliert werden.
+
+Eine ausführliche Darstellung der verwendeten Schablone, einschließlich ihrer Bestandteile und einer Beispielstruktur, findet sich im Anhang (siehe
+Abschnitt~\ref{template}). Diese Schablone dient als Grundlage, um die Anforderungen konsistent zu dokumentieren und eine klare Kommunikation
+innerhalb des Projektes zu fördern. Die strukturierte Herangehensweise erleichtert zudem die spätere Verifikation und Validierung der Anforderungen
+sowie ihre Umsetzung im Rahmen der Migration.
+
+Die Anforderungen an die Cloud-Migration werden in drei zentrale Kategorien unterteilt: technische, organisatorische und regulatorische Anforderungen.
+Diese Differenzierung ermöglicht es, die spezifischen Herausforderungen aus unterschiedlichen Perspektiven zu betrachten und gezielt darauf
+einzugehen. Technische Anforderungen betreffen dabei Aspekte wie Skalierbarkeit, Performance und Sicherheit der Infrastruktur, während
+organisatorische Anforderungen die internen Prozesse und Zuständigkeiten abdecken. Regulatorische Anforderungen beziehen sich auf die Einhaltung
+gesetzlicher Vorgaben und Richtlinien.
+
+Die Anforderungsanalyse ist darauf ausgerichtet, diese Kategorien systematisch zu erfassen und zu dokumentieren, um sicherzustellen, dass keine
+wesentlichen Aspekte übersehen werden. Sie bildet die Grundlage für die Konzeption der zukünftigen Infrastruktur und gewährleistet, dass alle
+Anforderungen nachvollziehbar und präzise in den späteren Entwicklungs- und Implementierungsphasen berücksichtigt werden.
+
+Die Erhebung und Formulierung der folgenden Anforderungen erfolgt in enger Zusammenarbeit mit der Robert Bosch Manufacturing Solutions GmbH, um
+sicherzustellen, dass diese den spezifischen Erwartungen und betrieblichen Anforderungen des Unternehmens präzise entsprechen.
+
+\subsection{Technische Anforderungen}
+
+Die technischen Anforderungen beschreiben die essenziellen Merkmale und Fähigkeiten, die das zukünftige System in der Cloud erfüllen muss, um eine
+sichere, flexible und leistungsfähige Infrastruktur bereitzustellen. Sie bilden die Grundlage für den Aufbau und die Konfiguration der
+Cloud-Infrastruktur und legen fest, wie zentrale Aspekte wie Skalierbarkeit, Redundanz und Sicherheitsstandards umgesetzt werden sollen. Eine
+detaillierte Auflistung dieser Anforderungen erfolgt im nächsten Abschnitt.
+
+\begin{itemize}
+      \item \hypertarget{Anforderung1.1}{\textbf{Anforderung 1.1: Selbstständige Skalierung bei Lastspitzen}}
+
+            Sobald entweder der Speicher, oder die Recheneinheit vollständig ausgelastet ist, muss das System fähig sein, automatisch zusätzliche
+            Ressourcen bereitzustellen.
+            \newpage
+      \item \hypertarget{Anforderung1.2}{\textbf{Anforderung 1.2: Redundante Datenverfügbarkeit}}
+
+            Solange das System in Betrieb ist, muss das System fähig sein, Daten in geografisch verteilten Rechenzentren zu speichern.
+
+      \item \hypertarget{Anforderung1.3}{\textbf{Anforderung 1.3: Verfügbarkeit}}
+
+            Solange das System in Betrieb ist, muss das System fähig sein, sowohl von innerhalb als auch von außerhalb des Unternehmensnetzwerks verfügbar
+            zu sein.
+
+      \item \hypertarget{Anforderung1.4}{\textbf{Anforderung 1.4: Automatisierte Updates}}
+
+            Solange das System in Betrieb ist, muss das System fähig sein, Updates selbstständig und ohne spürbare Unterbrechung der Dienste
+            einzuspielen.
+
+      \item \hypertarget{Anforderung1.5}{\textbf{Anforderung 1.5: \gls{loadbalancing}}}
+
+            Solange das System in Betrieb ist, muss das System fähig sein, den eingehenden Netzwerkverkehr durch einen Lastverteiler auf mehrere Instanzen der
+            Anwendung zu verteilen.
+
+      \item \hypertarget{Anforderung1.6}{\textbf{Anforderung 1.6: Datensicherung}}
+
+            Solange das System in Betrieb ist, muss das System fähig sein, in regelmäßigen Abständen automatische Backups der gesamten Datenbanken zu
+            erstellen und diese in einem sicheren Speicher abzulegen.
+
+      \item \hypertarget{Anforderung1.7}{\textbf{Anforderung 1.7: Verschlüsselung}}
+
+            Sobald eine Anfrage eintritt, muss das System fähig sein, Daten bei der Übertragung zu verschlüsseln.
+
+      \item \hypertarget{Anforderung1.8}{\textbf{Anforderung 1.8: Anbieterunabhängigkeit}}
+
+            Sobald das System in Betrieb genommen wird, sollte die Infrastruktur dem Inbetriebnehmer die Möglichkeit bieten den Cloud-Anbieter, ohne
+            weitere Anpassungen vornehmen zu müssen, unter den führenden Anbietern frei auswählen zu können.
+            \newpage
+      \item \hypertarget{Anforderung1.9}{\textbf{Anforderung 1.9: Regionalität}}
+
+            Solange das System in Betrieb ist, muss das System den Administratoren die Möglichkeit geben, Einstiegspunkte in verschiedenen global
+            verteilten Regionen zu schaffen.
+\end{itemize}
+
+
+\subsection{Organisatorische Anforderungen}
+
+Die organisatorischen Anforderungen umfassen interne Richtlinien und Sicherheitsanforderungen, die den Migrationsprozess in die Cloud maßgeblich
+beeinflussen. Sie stellen sicher, dass alle unternehmensinternen Vorgaben sowie regulatorischen und sicherheitsrelevanten Bestimmungen eingehalten
+werden, um einen konformen und sicheren Betrieb der Anwendungen in der Cloud zu gewährleisten. Im Folgenden werden die spezifischen organisatorischen
+Anforderungen aufgeführt, die bei der Planung und Umsetzung der Migration berücksichtigt werden müssen.
+
+\begin{itemize}
+      \item \hypertarget{Anforderung2.1}{\textbf{Anforderung 2.1: Zugriffskontrolle}}
+
+            Solange das System in Betrieb ist, muss das System fähig sein, auf Grundlage eines rollenbasierten Zugriffskontrollmodells Berechtigungen zu
+            verwalten. \cite{BoschCentralDirectiveAccessManagement}\footnote{Quelle aus dem Intranet (nicht öffentlich zugänglich) von BOSCH.}
+
+      \item \hypertarget{Anforderung2.2}{\textbf{Anforderung 2.2: Zugriff auf Protokolldaten nur für autorisierte Personen}}
+
+            Solange Protokolldaten vorliegen, muss das System fähig sein, diese nur für autorisierte Personen zugänglich zu machen.
+
+      \item \hypertarget{Anforderung2.3}{\textbf{Anforderung 2.3: Benachrichtigung bei sicherheitsrelevanten Ereignissen}}
+
+            Sobald ein sicherheitsrelevantes Ereignis eintritt, muss das System fähig sein, eine Benachrichtigung an die zuständigen Personen zu senden.
+
+      \item \hypertarget{Anforderung2.4}{\textbf{Anforderung 2.4: Unternehmensrichtlinien}}
+
+            Solange Cloud-Dienste genutzt werden, muss das System fähig sein, alle geltenden internen Unternehmensrichtlinien für die Cloud-Nutzung
+            nach \cite{BoschCompanyGuidelinesCloud}\footnote{Quelle aus dem Intranet (nicht öffentlich zugänglich) von BOSCH.} einzuhalten.
+
+      \item \hypertarget{Anforderung2.5}{\textbf{Anforderung 2.5: Erfahrung}}
+
+            Bereits zu Beginn der Migration muss das System so ausgewählt werden, dass im Unternehmen umfassendes Know-how in der verwendeten Technologie
+            vorhanden ist.
+
+      \item \hypertarget{Anforderung2.6}{\textbf{Anforderung 2.6: Integration}}
+
+            Sobald die zukünftige Infrastruktur auf der neuen Cloud-basierten Lösung aufgebaut wird, sollte die zukünftige Infrastruktur fähig sein, sich
+            bestmöglich in die bestehenden Systeme und Prozesse zu integrieren.
+\end{itemize}
+
+
+\subsection{Regulatorische Anforderungen}
+Die regulatorischen Anforderungen umfassen Datenschutzbestimmungen, Compliance-Vorgaben und weitere gesetzliche Richtlinien, die für den sicheren und
+rechtskonformen Betrieb der Anwendungen in der Cloud erforderlich sind. Diese Anforderungen stellen sicher, dass alle rechtlichen Verpflichtungen
+eingehalten werden und das Unternehmen in Übereinstimmung mit geltenden Vorschriften und Standards agiert. Im Folgenden sind die spezifischen
+regulatorischen Anforderungen aufgeführt, die bei der Planung und Umsetzung der Migration berücksichtigt werden.
+
+\begin{itemize}
+      \item \hypertarget{Anforderung3.1}{\textbf{Anforderung 3.1: Datenschutz}}
+
+            Solange personenbezogene Daten verarbeitet werden, muss das System fähig sein, alle Anforderungen der \ac{DSGVO} zu erfüllen.
+
+      \item \hypertarget{Anforderung3.2}{\textbf{Anforderung 3.2: Zertifizierte Rechenzentren}}
+
+            Solange Daten gespeichert werden, muss das System sicherstellen, dass diese ausschließlich in Rechenzentren mit gültigen Zertifizierungen
+            gemäß internationalen Sicherheitsstandards abgelegt werden.
+            \newpage
+      \item \hypertarget{Anforderung3.3}{\textbf{Anforderung 3.3: Datenverarbeitung auf Servern innerhalb der EU}}
+
+            Solange personenbezogene Daten von Benutzern innerhalb der EU verarbeitet werden, muss das System sicherstellen, dass diese nur auf Servern
+            innerhalb der Europäischen Union verarbeitet werden, sofern keine explizite Einwilligung der betroffenen Personen zur Verarbeitung außerhalb
+            der EU vorliegt.
+
+      \item \hypertarget{Anforderung3.4}{\textbf{Anforderung 3.4: Transparenz}}
+
+            Solange das System in Betrieb ist, muss das System fähig sein, zu jeder Zeit alle Protokolldaten vollständig und nachvollziehbar zu erfassen
+            und transparent bereitzustellen.
+\end{itemize}
+
+\section{Evaluierung der Cloud-Anbieter}
+\label{sec:evaluation_cloud_provider}
+
+Die Auswahl eines geeigneten Cloudanbieters stellt einen zentralen Schritt im Prozess der Migration der Web-Applikationen dar und hat erhebliche
+Auswirkungen auf die Erreichbarkeit, Skalierbarkeit und Kosteneffizienz der Infrastruktur. Ziel dieser Evaluierung ist es daher, die in Betracht
+kommenden Cloudanbieter hinsichtlich ihrer Dienste, Kostenstrukturen und ihrer Fähigkeit, die definierten Anforderungen zu erfüllen, systematisch zu
+vergleichen.
+
+Im Rahmen der Evaluierung werden ausschließlich die aktuell führenden Cloudanbieter in Betracht gezogen. Diese sind \ac{AWS}, Azure und Google Cloud
+Platform \cite{Borra2024}. Durch die Fokussierung auf diese Marktführer wird sichergestellt, dass die Untersuchung auf hoch relevante und
+praxiserprobte Technologien abzielt, die auch in anspruchsvollen Anwendungsszenarien verlässliche Ergebnisse liefern können.
+
+In den folgenden Abschnitten werden zunächst die wichtigsten Dienste der führenden Cloudanbieter vergleichend dargestellt. Anschließend erfolgt eine
+detaillierte Kostenanalyse, bevor abschließend die Anbieter anhand der zuvor definierten Anforderungen evaluiert werden.
+
+\subsection{Dienste}
+In diesem Abschnitt werden die zentralen Dienste der relevanten Cloudanbieter im Kontext der geplanten Cloud-Migration analysiert und dargestellt. Die
+Struktur der dazugehörigen Tabelle orientiert sich an der Arbeit von \cite{Borra2024} und \cite{Solangi2023}. \footnote{Einträge, die nicht direkt aus
+      einer der genannten Quellen entnommen sind, stammen aus eigenständiger Recherche auf den offiziellen Plattformen der Anbieter, einschließlich Tools
+      wie dem Preiskalkulationsprogramm.}
+
+Die Auswahl der in der Tabelle aufgeführten Kategorien basiert auf den spezifischen Anforderungen der migrierenden Infrastruktur. Sie umfassen
+Dienste, die essenziell für den Betrieb und die Wartung der cloudbasierten Anwendungen sind:
+
+\begin{itemize}
+      \item \textbf{Verwaltung des Lebenszyklus}: Diese Kategorie umfasst Tools, die den Entwicklungs- und Bereitstellungsprozess unterstützen, um
+            kontinuierliche Integrationen und automatisierte Deployments zu ermöglichen.
+      \item \textbf{Kubernetes}: Kubernetes-Dienste sind zentral für das Management der Anwendungen in einem Kubernetes Cluster.
+      \item \textbf{Datenbanken}: Hier werden sowohl relationale Datenbanken wie PostgreSQL als auch NoSQL-Datenbanken wie MongoDB betrachtet, da
+            diese zur Speicherung und Verwaltung der Anwendungsdaten verwendet werden.
+      \item \textbf{Überwachung}: In dieser Kategorie sind Monitoring-Lösungen aufgeführt, die zur Überwachung verschiedener Systemparameter dienen.
+            Sie ermöglichen einen tieferen Einblick in das System und das Monitoring kritischer Metriken.
+\end{itemize}
+
+Um die Übersichtlichkeit zu gewährleisten, wurden alle Dienste, die für die in dieser Arbeit untersuchte Cloud-Migration keine Bedeutung besitzen,
+nicht mit einbezogen. So werden beispielsweise Dienste im Zusammenhang mit maschinellem Lernen nicht berücksichtigt, da im zu migrierenden Portal und
+den darin enthaltenen Applikationen gegenwärtig keine künstliche Intelligenz eingesetzt wird.
+
+\renewcommand{\arraystretch}{1.2}
+\newcolumntype{X}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\begin{table}[H]
+      \centering
+      \caption{Vergleich der Cloud-Dienste führender Anbieter}
+      \label{tab:cloud_services_comparison}
+      \begin{tabular}{|X{3cm}|X{4cm}|X{4cm}|X{4cm}|}
+            \hline
+            \renewcommand*\acfsfont{\textbf} \textbf{Kategorie} & \textbf{\ac{AWS}}                  & \textbf{Microsoft Azure}      & \textbf{Google
+            Cloud Platform}                                                                                                                                                 \\
+            \hline
+            Kubernetes                                          & Amazon Elastic Kubernetes Services & \ac{AKS}                      & Google Kubernetes Engine             \\
+            \hline
+            MongoDB-Datenbanken                                 & Amazon DocumentDB                  & Cosmos DB                     & Firestore                            \\
+            \hline
+            PostgreSQL                                          & Amazon RDS for PostgreSQL          & Azure Database for PostgreSQL & Cloud SQL for PostgreSQL             \\
+            \hline
+            Überwachung                                         & Amazon Managed Grafana             & Azure Managed Grafana         & Grafana Cloud observability platform \\
+            \hline
+      \end{tabular}
+\end{table}
+
+Aus der Tabelle wird ersichtlich, dass alle betrachteten Cloudanbieter die benötigten Dienste bereitstellen.
+
+\subsection{Kostenvergleich}
+
+In diesem Abschnitt werden die Kosten für die Konfiguration der Produktivumgebung der betrachteten Migrationskandidaten (siehe Abschnitt
+\ref{sec:evaluation_cloud_provider}) miteinander verglichen. Die Produktivumgebung ist für die Analyse von besonderer Bedeutung, da die Testumgebung
+auf derselben Infrastruktur betrieben werden soll. Eine separate Kostenaufstellung für diese ist daher nicht notwendig.
+
+Bei der Konfiguration der \ac{GCP} müssen einige Annahmen getroffen werden, da spezifische Angaben für die Firestore-Datenbank, wie etwa die Anzahl
+der IO-Operationen (Schreibe- und Leseoperationen) oder Request Units, nicht allgemein konfigurierbar sind und daher einzeln angegeben werden müssen.
+Um eine Vergleichbarkeit zu gewährleisten, wird angenommen, dass 2/3 der Firestore-Operationen Leseoperationen und 1/3 Schreiboperationen ausmachen.
+Diese Aufteilung basiert auf einer Kombination aus typischen Zugriffsmustern \cite{10.14778/3401960.3401967}, die häufig mehr Lese- als
+Schreibzugriffe aufweisen, sowie den spezifischen Erwartungen der Robert Bosch Manufacturing Solutions GmbH.
+
+Ein weiterer Faktor, der die Kosten bei \ac{GCP} stark beeinflusst, ist die begrenzte Konfigurierbarkeit der Firestore-Datenbank\footnote{Information
+      entstammt dem Google Preiskalkulationsprogramm}. Im Vergleich zu \ac{AWS} und Microsoft Azure bietet \ac{GCP} hier nur eingeschränkte
+Möglichkeiten, Firestore-Instanzen individuell anzupassen. Diese mangelnde Flexibilität führt dazu, dass die Kosten für die Firestore Instanz im
+Rahmen der Produktivumgebung unverhältnismäßig hoch ausfallen.
+
+Die Kostenaufstellung im Anhang (siehe Abschnitt \ref{sec:kostenaufstellung_cloudanbieter}) zeigt deutliche Unterschiede in den monatlichen
+Gesamtkosten der drei Anbieter. Die Kosten für \ac{AWS} belaufen sich auf \$1595,65 pro Monat, während Microsoft Azure mit \$1436,06 pro Monat leicht
+günstiger ist. \ac{GCP} hingegen weist mit \$3400,86 pro Monat die mit Abstand höchsten Kosten auf. Diese Differenz lässt sich vor allem auf die zuvor
+genannten Einschränkungen bei der Konfiguration von Firestore zurückführen.
+
+Zusammenfassend zeigt der Vergleich, dass sowohl \ac{AWS} als auch Microsoft Azure kosteneffizienter für die hier betrachtete Produktivumgebung sind.
+\ac{GCP} ist aufgrund der fehlenden Konfigurationsmöglichkeiten und der damit verbundenen hohen Kosten in diesem Szenario weniger geeignet und wird
+daher nicht weiter untersucht.
+
+Nach \cite{Rani2014} entsprechen Azure als auch \ac{AWS}, dem PaaS-Service-Modell. Die Wahl zwischen \ac{AWS} und Microsoft Azure hängt also letztlich
+von der Evaluation der Anforderungen in Sektion \ref{ssec:requirements_evaluation_cloud_provider} ab.
+
+\subsection{Evaluation nach Anforderungen}
+\label{ssec:requirements_evaluation_cloud_provider}
+
+Aufgrund der in der Kostenaufstellung (siehe Abschnitt \ref{sec:kostenaufstellung_cloudanbieter}) identifizierten hohen monatlichen Kosten der Google
+Cloud Platform wird diese im weiteren Verlauf nicht berücksichtigt, da sie für die betrachtete Produktivumgebung als weniger geeignet erscheint. Die
+Evaluation konzentriert sich daher auf die beiden wirtschaftlich sinnvollen Anbieter \ac{AWS} und Microsoft Azure. Um eine fundierte Entscheidung
+zwischen diesen Anbietern zu treffen, erfolgt ein Vergleich basierend auf den in Sektion \ref{sec:anforderungsanalyse} definierten Anforderungen.
+
+Dabei liegt der Fokus auf den Anforderungen \hyperlink{Anforderung1.2}{1.2}, \hyperlink{Anforderung1.3}{1.3}, \hyperlink{Anforderung1.6}{1.6},
+\hyperlink{Anforderung1.7}{1.7}, \hyperlink{Anforderung1.9}{1.9}, \hyperlink{Anforderung2.1}{2.1}, \hyperlink{Anforderung2.2}{2.2},
+\hyperlink{Anforderung2.3}{2.3}, \hyperlink{Anforderung2.5}{2.5}, \hyperlink{Anforderung2.6}{2.6}, \hyperlink{Anforderung3.1}{3.1},
+\hyperlink{Anforderung3.2}{3.2}, \hyperlink{Anforderung3.3}{3.3} und \hyperlink{Anforderung3.4}{3.4}. Diese Anforderungen wurden ausgewählt, da ihre
+Erfüllung direkt von den jeweiligen Angeboten der Cloudanbieter abhängt und nicht von der spezifischen Implementierung oder Konfiguration der
+Infrastruktur.
+
+Das Ziel dieses Kapitels ist es, die Anbieter \ac{AWS} und Azure daraufhin zu vergleichen, wie gut ihre Dienste die definierten Anforderungen
+erfüllen. Dies schafft eine fundierte Basis für die Auswahl des passenden Cloudanbieters.
+
+\subsubsection{Methodik}
+
+Die Evaluation der Cloudanbieter basiert auf der Analyse ihrer bereitgestellten Dienste, Sicherheitsmechanismen und Infrastrukturmaßnahmen. Hierfür
+werden öffentlich zugängliche Dokumentationen, Fachartikel sowie Zertifizierungen nach internationalen Standards herangezogen.
+
+Zur Bewertung wird ein qualitativer Bewertungsmaßstab verwendet, da viele Anforderungen nicht direkt messbar sind oder stark vom spezifischen Szenario
+abhängen. Beispielsweise erfordert die Bewertung der Integration in bestehende Systeme oder der Einhaltung von Datenschutzbestimmungen eine
+kontextspezifische Analyse, die sich nicht sinnvoll in Zahlen darstellen lässt. Ein weiterer Vorteil dieses Ansatzes liegt in der Transparenz: Durch
+die verbale Beschreibung der Erfüllung wird nachvollziehbar dargestellt, warum ein Anbieter bestimmte Anforderungen erfüllt oder nicht. Dies
+verhindert, dass komplexe Sachverhalte vereinfacht und potenzielle Unterschiede zwischen den Anbietern übersehen werden.
+
+Die Erfüllung der Anforderungen wird dabei wie folgt kategorisiert:
+\begin{itemize}
+      \item \textbf{Erfüllt}: Der Anbieter erfüllt die Anforderung vollständig, ohne erkennbare Einschränkungen.
+      \item \textbf{Nicht erfüllt}: Der Anbieter erfüllt die Anforderung nicht oder bietet keine entsprechenden Mechanismen an.
+\end{itemize}
+
+Diese Kategorisierung gewährleistet, basierend auf den Anforderungen, eine objektive und nachvollziehbare Bewertung, während die qualitative
+Einordnung eine praxisnahe Entscheidungsgrundlage für die Auswahl des geeigneten Cloudanbieters bietet.
+
+\subsubsection{Beurteilung}
+\label{ssec:beurteilung}
+In diesem Abschnitt werden die zuvor definierten Anforderungen auf ihre Erfüllung durch die beiden verbleibenden Cloudanbieter, \ac{AWS} und Microsoft
+Azure, untersucht.
+
+Um eine fundierte Entscheidungsgrundlage zu schaffen, welche Plattform die betrachteten Anforderungen besser erfüllt, werden die Stärken und Schwächen
+beider Anbieter analysiert, um die jeweiligen Vor- und Nachteile herauszuarbeiten.
+
+Die Beurteilung wird zunächst in Form von erklärenden Texten zu den einzelnen Anforderungen durchgeführt. Die logische Unterteilung der aufgezählten
+Anforderungen entspricht der aus Kapitel \ref{sec:anforderungsanalyse}. Anschließend folgt eine tabellarische Aufstellung der Ergebnisse, um die
+Erfüllung der Anforderungen durch die beiden Anbieter übersichtlich und kompakt darzustellen.
+
+\begin{itemize}
+      \item \textbf{Technische Anforderungen}:
+            \begin{itemize}
+                  \item \textbf{\hyperlink{Anforderung1.2}{Anforderung 1.2 (Redundante Datenverfügbarkeit)}}: \ac{AWS} und Microsoft Azure bieten beide
+                        Mechanismen zur redundanten Datenverfügbarkeit an, die den Anforderungen entsprechen. \ac{AWS} stellt durch seine
+                        Multi-AZ-Bereitstellungen sicher, dass Daten in mehreren geografisch verteilten Rechenzentren gespeichert werden können.
+                        \cite{AWS-Multi-AZ-SQL} \cite{AWS-Multi-AZ-MongoDB} Ähnliches bietet Azure mit der Unterstützung von Zonenredundanz, die ebenfalls
+                        eine geografisch verteilte Speicherung der Daten ermöglicht. \cite{Azure-redundancy-SQL}
+                        \cite{Azure-redundancy-MongoDB}
+                  \item \textbf{\hyperlink{Anforderung1.3}{Anforderung 1.3 (Verfügbarkeit)}}: Beide Anbieter garantieren eine hohe Verfügbarkeit ihrer
+                        Dienste. \ac{AWS} gibt ein Service Level Agreement, je nach gebuchter Option von mindestens 99\% für seine Hauptdienste an, während
+                        Microsoft ähnliche Werte für seine Azure Services bietet. \cite{AWS-Availability} \cite{Azure-Availability}
+                  \item \textbf{\hyperlink{Anforderung1.6}{Anforderung 1.6 (Datensicherung)}}: \ac{AWS} bietet automatische Backups über seine Dienste
+                        wie Amazon RDS und \ac{AWS} Backup, die regelmäßige Sicherungen unterstützen und diese in einem sicheren Speicher ablegen, an.
+                        \cite{AWS-Backup-RDS}\cite{AWS-Backup-Service} Azure bietet, mit in den Datenbanksystemen eingebauten Funktionen,
+                        \cite{Perry2021}\cite{AzureMongoDbAutomaticBackups} Mechanismen an, die ebenfalls regelmäßige Datensicherungen und sichere
+                        Speicherorte gewährleisten.
+                        \newpage
+                  \item \textbf{\hyperlink{Anforderung1.7}{Anforderung 1.7 (Verschlüsselung)}}: \ac{AWS} und Azure unterstützen beide die
+                        Verschlüsselung von Daten während der Übertragung und im Ruhezustand. Beide Anbieter bieten durch Standards wie \ac{TLS} und
+                        AES-256 sichere Verschlüsselungsmethoden an, die den Anforderungen entsprechen. \cite{AWS-Encryption-Rest}
+                        \cite{AWS-Encryption-Transit}
+                  \item \textbf{\hyperlink{Anforderung1.9}{Anforderung 1.9 (Regionalität)}}: \ac{AWS} und Azure bieten beide die Möglichkeit,
+                        Einstiegspunkte in global verteilten Regionen flexibel zu schaffen. \ac{AWS} verfügt über ein Netzwerk an Rechenzentren mit
+                        mehreren Verfügbarkeitszonen in zahlreichen Ländern weltweit, was eine schnelle Bereitstellung in verschiedenen Regionen
+                        ermöglicht. Microsoft Azure bietet ebenfalls ein weitreichendes globales Netzwerk mit 54 Regionen auf allen Kontinenten und
+                        orientiert sich dabei gezielt an regionalen Marktanforderungen und regulatorischen Vorgaben. \cite{Bögelsack2022}
+            \end{itemize}
+      \item \textbf{Organisatorische Anforderungen}:
+            \begin{itemize}
+                  \item \textbf{\hyperlink{Anforderung2.1}{Anforderung 2.1 (Zugriffskontrolle)}}: \ac{AWS} verwendet sein sogenanntes Identity and Access
+                        Management, um eine rollenbasierte Zugriffskontrolle zu ermöglichen. Azure bietet mit Azure Entra ID ebenfalls ein leistungsfähiges
+                        Tool zur Verwaltung von Berechtigungen und Zugriffen an. \cite{AWS-IAM-Roles} \cite{Azure-EntraId-Roles}
+                  \item \textbf{\hyperlink{Anforderung2.2}{Anforderung 2.2 (Zugriff auf Protokolldaten nur für autorisierte Personen)}}: Durch die in
+                        der Bewertung der vorhergehenden Anforderung erwähnten Services, ist es bei beiden Anbietern möglich Protokolldaten vor
+                        unbefugtem Zugriff zu schützen. Dies resultiert daraus, dass der Zugriff auf Applikationen in beiden Fällen beschränkt werden
+                        kann. Aufgrund dessen gilt diese Anforderung ebenfalls von beiden Cloudanbietern als erfüllt. \cite{AWS-IAM-Roles}
+                        \cite{Azure-EntraId-Roles}
+                        \newpage
+                  \item \textbf{\hyperlink{Anforderung2.3}{Anforderung 2.3 (Benachrichtigung bei sicherheitsrelevanten Ereignissen)}}: \ac{AWS} und
+                        Microsoft Azure bieten mit Amazon GuardDuty bzw. Azure Defender for Cloud umfassende Lösungen, um sicherheitsrelevante
+                        Ereignisse zu erkennen und entsprechende Benachrichtigungen auszulösen. Beide Dienste ermöglichen es Administratoren,
+                        automatisierte Benachrichtigungen und Reaktionen auf sicherheitskritische Vorfälle zu konfigurieren. Dabei integrieren sie
+                        sich nahtlos in die jeweilige Sicherheitsinfrastruktur der Anbieter und bieten umfangreiche Anpassungsmöglichkeiten.
+                        \cite{AWS-GuardDuty} \cite{AWS-GuardDuty-Notifications} \cite{Azure-DefenderForCloud}
+                        \cite{Azure-DefenderForCloud-Notifications}
+                  \item \textbf{\hyperlink{Anforderung2.5}{Anforderung 2.5 (Erfahrung)}}: \ac{AWS} und Azure sind beides bekannte Anbieter mit breiter
+                        Unterstützung in der Industrie. Dennoch ist das im Unternehmen bereits verfügbare Know-how über Azure größer. Dies liegt
+                        daran, dass es zum Zeitpunkt der Erstellung dieser Arbeit mehr interne Dokumentationen über Azure gibt als über \ac{AWS}. So
+                        gibt es laut der Bosch-internen Suchmaschine für Dokumentationen circa 28.553 Beiträge über die \ac{AWS} Cloud und rund 60.080
+                        Artikel über die Azure Cloud im unternehmensinternen Archiv. Somit gibt es mehr als doppelt so viele interne Quellen über
+                        Azure, als über \ac{AWS}. Dies führt dazu, dass die \hyperlink{Anforderung2.5}{Anforderung 2.5} für Microsoft Azure als
+                        erfüllt, aber für \ac{AWS} als nicht erfüllt gilt.
+                        % Herausgefunden indem "Azure Cloud" und "AWS Cloud" in der Suchmaschine eingegeben wurde und die Anzahl Ergebnisse angeschaut wurde
+                        % (23.11.2024)
+                        \newpage
+                  \item \textbf{\hyperlink{Anforderung2.6}{Anforderung 2.6 (Integration)}}: Die Integration in bestehende Systeme und Prozesse spielt
+                        eine entscheidende Rolle bei der Wahl des Cloudanbieters. Microsoft Azure bietet hier einen deutlichen Vorteil, da bereits
+                        eine wesentliche Komponente aus dem Azure-Ökosystem unternehmensweit genutzt wird. Azure Entra ID (ehemals Azure Active
+                        Directory) dient als zentrale Lösung für die Verwaltung von Benutzern im gesamten Unternehmen
+                        \cite{BoschEntraId}\footnote{Quelle aus dem Intranet (nicht öffentlich zugänglich) von BOSCH.}. Dadurch ist eine nahtlose
+                        Integration der Azure-Cloud-Dienste in die bestehenden Systeme gewährleistet, ohne dass zusätzliche Anpassungen erforderlich
+                        sind.
+
+                        Im Gegensatz dazu wird von \ac{AWS} aktuell keine Technologie unternehmensweit verwendet. Im Fall einer Nutzung von \ac{AWS}
+                        müsste beispielsweise ebenfalls Azure Entra ID für die Authentifizierung eingebunden werden, da dies die zentrale
+                        Benutzerverwaltung im Unternehmen darstellt \cite{BoschEntraId}\footnote{Quelle aus dem Intranet (nicht öffentlich zugänglich)
+                              von BOSCH.}. Das bedeutet, dass eine Integration von \ac{AWS} eine Kombination aus beiden Plattformen erfordert, was zu
+                        erhöhtem Implementierungsaufwand führen könnte. Dadurch ergibt sich ein Vorteil für eine rein auf Azure basierende Lösung, da
+                        hier keine zusätzlichen Schnittstellen oder Anpassungen notwendig sind.
+
+            \end{itemize}
+      \item \textbf{Regulatorische Anforderungen}:
+            \begin{itemize}
+                  \item \textbf{\hyperlink{Anforderung3.1}{Anforderung 3.1 (Datenschutz)}}: Die Verarbeitung personenbezogener Daten unterliegt in Deutschland
+                        den strengen Vorgaben der \ac{DSGVO}. Sowohl \ac{AWS} als auch Microsoft Azure stellen laut den Angaben auf ihren Webseiten sicher,
+                        dass ihre Dienste alle Anforderungen der \ac{DSGVO} erfüllen. \cite{AWS-Datenschutz} \cite{Azure-Datenschutz}
+
+                  \item \textbf{\hyperlink{Anforderung3.2}{Anforderung 3.2 (Zertifizierte Rechenzentren)}}: Die Nutzung zertifizierter Rechenzentren ist
+                        essenziell, um die Sicherheit und Verfügbarkeit von Daten gemäß internationalen Standards zu gewährleisten. Sowohl \ac{AWS} als auch
+                        Microsoft Azure betreiben Rechenzentren, die nach der umfassenden ISO 27001 Norm zertifiziert sind. Diese stellt sicher, dass die
+                        Anbieter strikte Maßnahmen zur Informationssicherheit implementieren, einschließlich Zugriffskontrollen, Risikomanagement und Schutz
+                        der Datenintegrität.
+
+                        Darüber hinaus verfügen beide Anbieter über weitere relevante Zertifizierungen, wie beispielsweise ISO 27018 für den Schutz
+                        personenbezogener Daten in der Cloud. \cite{AWS-Datenschutz} \cite{Azure-Datenschutz}
+
+                  \item \textbf{\hyperlink{Anforderung3.3}{Anforderung 3.3 (Datenverarbeitung auf Servern in der EU)}}: \ac{AWS} und Azure stellen
+                        beide sicher, dass personenbezogene Daten auf Servern innerhalb der EU verarbeitet werden können. So konnte mithilfe des
+                        Preiskalkulationsprogramms der jeweiligen Anbieter herausgefunden werden, dass \ac{AWS} dies unter anderem über seine
+                        Rechenzentren in Frankfurt und Irland ermöglicht, während Azure über seine europäischen Regionen ebenfalls eine Verarbeitung
+                        innerhalb der EU gewährleistet.
+
+                  \item \textbf{\hyperlink{Anforderung3.4}{Anforderung 3.4 (Transparenz)}}: Die Transparenz in der Protokollierung und Bereitstellung von
+                        Protokolldaten ist essenziell, um die Nachvollziehbarkeit und Sicherheit der Systeme zu gewährleisten. Sowohl \ac{AWS} als auch
+                        Microsoft Azure bieten umfassende Lösungen für die transparente Erfassung und Bereitstellung von Protokolldaten.
+
+                        \ac{AWS} stellt Dienste wie \ac{AWS} CloudTrail zur Verfügung, mit denen alle \ac{API}-Aufrufe und Aktionen innerhalb der
+                        Infrastruktur detailliert protokolliert werden. Diese Logs sind vollständig durchsuchbar und lassen sich exportieren, um sie
+                        in andere Systeme zu integrieren. Azure bietet mit Azure Monitor ähnliche Funktionen, die Protokolldaten in Echtzeit erfassen
+                        und eine umfassende Nachvollziehbarkeit gewährleisten. Beide Anbieter ermöglichen es, Protokolldaten über sichere Kanäle an
+                        autorisierte Personen weiterzugeben. \cite{AWS-CloudTrail} \cite{AWS-CloudTrail-Export} \cite{Azure-Monitor}
+                        \cite{Azure-Monitor-Overview}
+            \end{itemize}
+\end{itemize}
+
+\renewcommand{\arraystretch}{1.5}
+
+\begin{longtable}{|p{8.5cm}|c|c|}
+      \caption{Erfüllung der Anforderungen durch AWS und Microsoft Azure}
+      \label{tab:anforderungen_erfüllung}                                                                                                  \\
+      \hline
+      \textbf{Anforderung}                                                                      & \textbf{AWS}  & \textbf{Microsoft Azure} \\ \hline
+      \endfirsthead
+      \hline
+      \textbf{Anforderung}                                                                      & \textbf{AWS}  & \textbf{Microsoft Azure} \\ \hline
+      \endhead
+      \hline
+      \multicolumn{3}{r}{\textit{Fortsetzung auf der nächsten Seite}}                                                                      \\ \hline
+      \endfoot
+      \hline
+      \endlastfoot
+      \hyperlink{Anforderung1.2}{1.2}: Redundante Datenverfügbarkeit                            & Erfüllt       & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung1.3}{1.3}: Verfügbarkeit                                            & Erfüllt       & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung1.6}{1.6}: Datensicherung                                           & Erfüllt       & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung1.7}{1.7}: Verschlüsselung                                          & Erfüllt       & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung1.9}{1.9}: Regionalität                                             & Erfüllt       & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung2.1}{2.1}: Zugriffskontrolle                                        & Erfüllt       & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung2.2}{2.2}: Zugriff auf Protokolldaten nur für autorisierte Personen & Erfüllt       & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung2.3}{2.3}: Benachrichtigung bei sicherheitsrelevanten Ereignissen   & Erfüllt       & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung2.5}{2.5}: Erfahrung                                                & Nicht erfüllt & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung2.6}{2.6}: Integration                                              & Nicht erfüllt & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung3.1}{3.1}: \ac{DSGVO}-Konformität                                   & Erfüllt       & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung3.2}{3.2}: Zertifizierte Rechenzentren                              & Erfüllt       & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung3.3}{3.3}: Datenverarbeitung auf Servern innerhalb der EU           & Erfüllt       & Erfüllt                  \\ \hline
+      \hyperlink{Anforderung3.4}{3.4}: Transparenz                                              & Erfüllt       & Erfüllt                  \\ \hline
+\end{longtable}
+
+Die Tabelle zeigt, dass sowohl \ac{AWS} als auch Microsoft Azure die meisten der definierten Anforderungen erfüllen. Besonders in den Bereichen
+Verfügbarkeit, Sicherheit und Datenschutz sind beide Anbieter gut aufgestellt und erfüllen die Anforderungen vollständig. Dies verdeutlicht, dass
+beide Plattformen für eine produktive Nutzung im Unternehmen grundsätzlich geeignet sind.
+
+Jedoch gibt es Unterschiede in der Erfüllung spezifischer Anforderungen. Während \ac{AWS} bei der Integration und Erfahrung Defizite aufweist, erfüllt
+Azure diese Anforderungen vollständig. Dies ist insbesondere darauf zurückzuführen, dass die Azure-Technologie, Entra ID zur Verwaltung der
+Zugriffsrechte bereits im Unternehmen eingesetzt werden und sich somit auf bestehende Infrastruktur zurückgegriffen werden kann. \ac{AWS} hingegen ist
+im aktuellen Unternehmenskontext nicht in die Systeme eingebunden, was die Integration erschwert.
+
+Die vollständige Erfüllung der Anforderungen durch beide Anbieter in sicherheitskritischen Bereichen wie den Zertifizierten Rechenzentren und
+Transparenz unterstreicht die hohe Qualität der Sicherheitsstandards bei beiden Anbietern. Beide Plattformen gewährleisten zudem die Einhaltung der
+\ac{DSGVO}, was für die Verarbeitung personenbezogener Daten unerlässlich ist.
+
+Insgesamt zeigt die Auswertung, dass Microsoft Azure aufgrund der besseren Integration in die bestehende Infrastruktur und der höheren vorhandenen
+Erfahrung im Unternehmen in dieser Evaluation im Vorteil ist. Aus diesem Grund wird Azure als Cloudanbieter für die durchzuführende Migration gewählt.
+
+\section{Risiken und Herausforderungen der Migration}
+Die Migration der Anwendungen und Daten in die Cloud stellt einen komplexen Prozess dar, der mit einer Vielzahl von Risiken und Herausforderungen
+verbunden ist. Neben technischen Aspekten wie der Anpassung bestehender Systeme und der Datenmigration spielen auch organisatorische und
+wirtschaftliche Faktoren eine zentrale Rolle. Eine frühzeitige Identifikation und Analyse dieser Risiken ist entscheidend, um eine strukturierte
+Planung und erfolgreiche Umsetzung der Migration zu gewährleisten.
+
+In diesem Abschnitt werden die potenziellen Herausforderungen und Risiken betrachtet. Dabei liegt der Fokus auf technischen, organisatorischen,
+sicherheitsrelevanten und wirtschaftlichen Aspekten, die für die Migration besonders kritisch sind. Ziel ist es, ein umfassendes Verständnis für die
+möglichen Problemfelder zu vermitteln und Strategien zur Minimierung dieser Risiken aufzuzeigen. Dies soll als Grundlage für die erfolgreiche Planung
+und Durchführung der Migration dienen.
+
+\subsection{Technische Herausforderungen}
+Die Migration in die Cloud bringt eine Vielzahl technischer Herausforderungen mit sich, die sorgfältig berücksichtigt werden müssen. Diese betreffen
+insbesondere die Datenmigration sowie die Integration von Drittanbieterdiensten.
+
+\subsubsection{Umzug der Infrastruktur}
+Ein zentraler Aspekt der Migration ist die korrekte Konfiguration von Netzwerk- und Maschinenressourcen in der neuen Cloud-Umgebung. Die bestehende
+Infrastruktur muss so abgebildet werden, dass sie den Anforderungen an Verfügbarkeit, Performance und Sicherheit entspricht. Dies umfasst die
+Einrichtung virtueller Netzwerke, \glsfirst{loadbalancing} und Firewalls sowie die Definition von Zugriffskontrollen. Fehler bei der Konfiguration
+können zu Leistungseinbußen oder Sicherheitsrisiken führen, weshalb dieser Prozess mit großer Sorgfalt durchgeführt werden muss.
+
+Ein weiterer wichtiger Faktor ist die Skalierbarkeit der Infrastruktur, wie in Kapitel \ref{ssec:ziel_der_migration} beschrieben. Die Cloud ermöglicht
+es grundsätzlich, Ressourcen dynamisch an wechselnde Anforderungen anzupassen. Damit Lastspitzen effektiv abgefangen und unnötige Kosten vermieden
+werden, ist die Implementierung automatischer Skalierungsmechanismen wie der Container-Orchestrierung durch Kubernetes entscheidend. Nur durch eine
+optimierte Integration dieser Technologie kann die Skalierung effizient und bedarfsgerecht erfolgen.
+
+\subsubsection{Datenmigration}
+Die Migration von Datenbanken in die Cloud stellt einen wichtigen Schritt im Migrationsprozess dar. Obwohl die Datenbanken in diesem Fall nicht so
+groß sind, dass physische Transferlösungen wie Azure Data Box erforderlich wären, bleibt die Sicherstellung von Datenintegrität und Sicherheit während
+des Transfers eine zentrale Herausforderung. Es muss gewährleistet sein, dass keine Daten verloren gehen und die übertragenen Daten korrekt in der
+neuen Umgebung ankommen, ohne dass ein dritter die Möglichkeit hat mitlesen zu können. Sensible Daten müssen aufgrund dessen während der Übertragung
+verschlüsselt werden, um unbefugten Zugriff zu verhindern.
+
+\subsection{Organisatorische Herausforderungen}
+Die organisatorischen Herausforderungen der Migration konzentrieren sich insbesondere auf die Bereiche Koordination und Planung sowie den Umgang mit
+fehlender Vorerfahrung bei bestimmten Technologien.
+
+\subsubsection{Koordination und Planung}
+Eine erfolgreiche Migration in die Cloud erfordert eine sorgfältige Planung und präzise Koordination aller beteiligten. Dies schließt die Festlegung
+klarer Zuständigkeiten, realistischer Zeitpläne und ausreichender Ressourcen ein. Die Komplexität der Migration macht es notwendig, dass alle Schritte
+und Meilensteine frühzeitig definiert und dokumentiert werden, um Missverständnisse oder Verzögerungen zu vermeiden. Besonders kritisch ist die
+Abstimmung zwischen den Teams, die für die Infrastruktur, die Datenmigration und die Implementierung der neuen Umgebung verantwortlich sind. Eine
+mangelhafte Koordination kann zu ineffizientem Ressourceneinsatz und erhöhtem Arbeitsaufwand führen.
+
+\subsubsection{Mangelnde Vorerfahrung mit Kubernetes}
+Ein weiterer organisatorischer Aspekt betrifft den Umgang mit fehlender Vorerfahrung bei der Nutzung von Kubernetes, der zentralen Technologie für das
+Management von Containern und die Orchestrierung der Cloud-Infrastruktur. Die gesamte Abteilung hat bisher keine praktische Erfahrung mit Kubernetes,
+was die Einführung dieser Technologie verlangsamen kann. Dieser Umstand erfordert eine intensive Einarbeitung in die grundlegenden Konzepte und
+Funktionen, um sicherzustellen, dass die Infrastruktur korrekt implementiert und effizient verwaltet werden kann.
+
+\subsection{Sicherheitsrisiken}
+Die Migration in die Cloud birgt verschiedene Sicherheitsrisiken, die sowohl während des Transfers als auch nach der Einrichtung der neuen Umgebung
+auftreten können. Ein zentraler Aspekt ist die Gefahr von Datenlecks oder unbefugtem Zugriff während des Migrationsprozesses. Sensible Daten könnten
+durch unsichere Verbindungen abgefangen werden, falls nicht ausreichend Schutzmaßnahmen wie Verschlüsselung implementiert werden.
+\cite{DBLP:journals/corr/Hababeh15}
+
+Nach der Migration besteht das Risiko von Fehlkonfigurationen in der neuen Cloud-Umgebung. Beispielsweise könnten falsche Einstellungen dazu führen,
+dass Daten unbefugt eingesehen oder verändert werden können. \cite{DBLP:journals/corr/Hababeh15}
+
+Zusätzlich ist, im Gegensatz zur ursprünglichen Infrastruktur, welche nur aus dem firmeninternen Netzwerk erreichbar war, mit Angriffen auf die
+Cloud-Umgebung durch bösartige Akteure (zum Beispiel durch DDoS- oder Brute-Force-Angriffe), die die Verfügbarkeit und Sicherheit der Systeme
+gefährden, zu rechnen. \cite{9606751}
+
+\subsection{Wirtschaftliche Risiken}
+Die Migration in die Cloud ist nicht nur technisch und organisatorisch anspruchsvoll, sondern birgt auch wirtschaftliche Risiken, die sorgfältig
+berücksichtigt werden müssen. Diese betreffen vor allem unerwartete Kostenüberschreitungen und die langfristige Abhängigkeit von einem einzelnen
+Cloudanbieter.
+
+\subsubsection{Kostenüberschreitungen}
+Ein potenzielles wirtschaftliches Risiko in Bezug auf die Cloud-Migration sind unvorhergesehene Kosten, die während des Prozesses entstehen können.
+Dies umfasst zusätzliche Aufwände für die Konfiguration, die Anpassung bestehender Anwendungen und die Bewältigung technischer Herausforderungen. Auch
+können nicht vollständig kalkulierte Gebühren für Cloud-Dienste wie Datenübertragung, Storage oder Skalierung die geplanten Budgets überschreiten.
+Diese Risiken erfordern eine detaillierte Planung der Migration, um Überraschungen und Budgetüberschreitungen zu vermeiden.
+
+\subsubsection{Abhängigkeit von einem Anbieter}
+Ein bedeutendes wirtschaftliches Risiko bei der Nutzung von Cloud-Diensten ist die Abhängigkeit von einem einzelnen Anbieter. Diese entsteht
+insbesondere dann, wenn die Infrastruktur vollständig auf die spezifischen Technologien oder proprietären Schnittstellen des Anbieters abgestimmt ist.
+In solchen Fällen kann ein zukünftiger Wechsel zu einem anderen Anbieter mit erheblichem Aufwand und hohen Kosten verbunden sein. Ein solcher Wechsel
+könnte dann notwendig sein, wenn der Cloudanbieter, bei welchem das System läuft, seine Preise so signifikant erhöht, dass ein anderer Anbieter
+deutlich günstiger ist.
+
+\section{Strategien zur Risikominimierung}
+Um die in den vorherigen Abschnitten identifizierten Risiken zu minimieren, werden im Folgenden Strategien vorgestellt, die gezielt auf die
+technischen, organisatorischen, sicherheitsrelevanten und wirtschaftlichen Herausforderungen eingehen. Diese Maßnahmen sind darauf ausgerichtet,
+potenzielle Störungen zu vermeiden und einen reibungslosen Übergang zur Cloud sicherzustellen.
+
+\subsection{Sicherstellung von Datenintegrität und Sicherheit}
+Während der Datenmigration ist der Schutz sensibler Informationen von zentraler Bedeutung. Um unbefugten Zugriff zu verhindern, sollten sichere
+Übertragungsprotokolle wie \ac{TLS} eingesetzt werden. Darüber hinaus sollte die Verschlüsselung aller Daten, sowohl während der Übertragung als auch
+im Ruhezustand, gewährleistet werden. Azure verschlüsselt laut der offiziellen Dokumentation standardmäßig alle Daten im Ruhezustand und die
+Verschlüsselung der Daten während der Übertragung im Betrieb wird durch die Verwendung von HTTPS gewährleistet. \cite{Azure-Encryption-Transit-Rest}
+
+\subsection{Standardisierung zur Reduzierung der Abhängigkeit von einem Anbieter}
+Um die Abhängigkeit von einem einzigen Cloudanbieter zu reduzieren, sollte die Erstellung der Infrastruktur möglichst unabhängig von proprietären
+Technologien gestaltet werden. Dies kann durch Werkzeuge wie Terraform, die es ermöglichen eine Infrastruktur deskriptiv zu definieren, verwirklicht
+werden. Eine solche Herangehensweise ermöglicht es, die Infrastruktur bei Bedarf einfacher auf eine andere Plattform zu übertragen, was langfristig
+die Flexibilität erhöht und das Risiko einer Bindung an einen Anbieter verringert. \cite{Howard2022}
+
+\subsection{Umgang mit fehlender Vorerfahrung}
+Da die gesamte Abteilung keine Vorerfahrung mit dem Einsatz von Kubernetes hat, wird die Einführung dieser Technologie durch den gezielten Einsatz
+interner Ressourcen unterstützt. Eine Absprache mit der Robert Bosch Manufacturing Solutions GmbH stellt sicher, dass auf relevante interne
+Dokumentationen sowie auf die Expertise erfahrener Mitarbeiter aus anderen Abteilungen zugegriffen werden kann. Dies fördert den Wissenstransfer und
+ermöglicht eine effektive Einarbeitung der Abteilung in die neue Technologie.
+
+\subsection{Sorgfältige Planung und Koordination}
+Eine detaillierte Planung aller Migrationsschritte ist essenziell, um technische und organisatorische Herausforderungen zu bewältigen. Dazu gehört
+unter anderem die klare Kommunikation der Projektziele an alle Beteiligten \cite{Cabarkapa2019/12}. Es kommen zudem regelmäßige Meetings und
+Fortschrittsberichte zum Einsatz, um Missverständnisse so gut wie möglich zu vermeiden. Dadurch können potenzielle Probleme frühzeitig erkannt und
+Verzögerungen aus dem Weg gegangen werden\footnote{Anforderung des Betreuers}.

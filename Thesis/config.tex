@@ -1,0 +1,123 @@
+% !TEX root = master.tex
+\usepackage{babel}
+\usepackage{csquotes}
+
+\usepackage{makeidx}
+\usepackage{listings}
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{varioref} 
+\usepackage{caption}
+\usepackage{booktabs}
+\usepackage[hidelinks=true]{hyperref}
+\usepackage[noabbrev, capitalize]{cleveref} % Add this for smart referencing
+\usepackage{fnpct} 
+\usepackage{calc}
+\usepackage{array}
+\usepackage{acronym}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{setspace}
+\usepackage{tocloft}
+\usepackage{xcolor} % Standard for coloring
+
+\usepackage[T1]{fontenc}
+% inputenc is omitted as you are using XeLaTeX (based on your settings.json)
+
+%% FONT SELECTION
+\renewcommand*{\familydefault}{\sfdefault}
+\addtokomafont{disposition}{\sffamily}
+
+% ACRONYMS
+\makeatletter
+\@ifpackagelater{acronym}{2015/03/20}
+{\renewcommand*{\aclabelfont}[1]{\textbf{{\acsfont{#1}}}}}{}
+\makeatother
+
+% --- LISTINGS GENERAL SETTINGS ---
+\renewcommand{\lstlistingname}{Listing}
+\renewcommand{\lstlistlistingname}{List of Listings}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+% --- PYTHON STYLING ---
+\lstdefinestyle{pythonstyle}{
+    language=Python,
+    morekeywords={self, @classmethod, @staticmethod}, % add specific keywords
+}
+
+% --- C STYLING ---
+\lstdefinestyle{cstyle}{
+    language=C,
+    morekeywords={uint8_t, uint16_t, uint32_t, size_t},
+}
+
+% --- ALGORITHMS (English) ---
+\renewcommand{\listalgorithmname}{List of Algorithms}
+\floatname{algorithm}{Algorithm}
+
+% PAGE HEADER / FOOTER
+\RequirePackage[automark]{scrlayer-scrpage}
+\renewcommand{\chaptermarkformat}{}
+\RedeclareSectionCommand[beforeskip=0pt]{chapter}
+\clearpairofpagestyles
+
+\ofoot[\rule{0pt}{\ht\strutbox+\dp\strutbox}\pagemark]{\rule{0pt}{\ht\strutbox+\dp\strutbox}\pagemark}
+\ohead{\headmark}
+
+\newcommand{\setTitlepage}{
+    \input{titlepage}
+    \pagenumbering{roman}
+    \normalfont
+}
+
+\newcommand{\initializeText}{
+    \clearpage
+    \ihead{\chaptername~\thechapter}
+    \pagenumbering{arabic}
+}
+
+\newcommand{\initializeAppendix}{
+    \appendix
+    \ihead{}
+    % Changed "Anhang" to "Appendix"
+    \cftaddtitleline{toc}{chapter}{Appendix}{}
+}
+
+% Define source file directory
+\newcommand{\sourcepath}{code/}
+
+
+
+%\begin{lstlisting}[style=pythonstyle, caption={My Python Script}]
+%def hello_world():
+%    print("Hello Master Thesis")
+%\end{lstlisting}
+
+%\begin{lstlisting}[style=cstyle, caption={My C code}]
+%int main() {
+%    return 0;
+%}
+%\end{lstlisting}
