@@ -1,0 +1,112 @@
+% !TEX root = master.tex
+
+% 1. Set 'english' globally here to avoid package clashes
+\documentclass[english, fontsize=12pt,BCOR=5mm,DIV=12,parskip=half,listof=totoc,
+               paper=a4,toc=bibliography,pointlessnumbers]{scrreprt}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{babel} 
+\usepackage{csquotes}
+
+% Use numeric style for Master Thesis (usually preferred)
+% Use Harvard-Anglia style (Author-Year)
+\usepackage[backend=biber, style=authoryear, autocite=inline]{biblatex}
+
+\usepackage{makeidx}
+\usepackage{listings}
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{varioref} 
+\usepackage{caption}
+\usepackage{booktabs}
+\usepackage[hidelinks=true]{hyperref}
+\usepackage{fnpct} 
+\usepackage{calc}
+\usepackage{array}
+\usepackage{acronym}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{setspace}
+\usepackage{tocloft}
+\usepackage[toc]{glossaries}
+\usepackage{xcolor}
+
+% --- Command Definitions (Aligned with Titlepage) ---
+\newcommand{\imagedir}{img}
+\newcommand{\TypeOfThesis}[1]{\def\TheTypeOfThesis{#1}}
+\newcommand{\ThesisTitle}[1]{\def\TheThesisTitle{#1}\hypersetup{pdftitle={#1}}}
+\newcommand{\Author}[1]{\def\TheAuthor{#1}\hypersetup{pdfauthor={#1}}}
+\newcommand{\Company}[1]{\def\TheNameOfTheCompany{#1}}
+\newcommand{\AcademicSupervisor}[1]{\def\TheAcademicSupervisor{#1}}
+\newcommand{\CompanySupervisor}[1]{\def\TheCompanySupervisor{#1}}
+\newcommand{\WorkPeriod}[1]{\def\TheWorkPeriod{#1}}
+\newcommand{\SubmissionDate}[1]{\def\TheSubmissionDate{#1}}
+\newcommand{\Matriculationnumber}[1]{\def\TheMatriculationnumber{#1}}
+
+\loadglsentries{glossaries}
+\makeindex
+\addbibresource{bibliography.bib}
+
+% Load your custom config (Python/C styling)
+\input{config}
+
+% --- Thesis Metadata ---
+\TypeOfThesis{Master Thesis} 
+\ThesisTitle{Development of Autonomous Systems for Sensor Applications}
+\Author{Torben Müller}
+\Company{Bosch Sensortec GmbH}
+\Matriculationnumber{3793945}
+\AcademicSupervisor{Prof. Dr. André Zimmermann}
+\CompanySupervisor{Dennis Huber}
+\WorkPeriod{16.02.2026 - 16.08.2026} 
+\SubmissionDate{16.08.2026}
+
+\begin{document}
+
+\setTitlepage
+
+\input{DeclarationofAuthenticity} % Your translated declaration
+\cleardoublepage
+\input{nondisclosurenotice}
+\cleardoublepage
+
+\tableofcontents
+\cleardoublepage
+
+\listoffigures
+\cleardoublepage
+\listoftables
+\cleardoublepage
+%\lstlistoflistings
+%\cleardoublepage
+%\listofalgorithms
+%\cleardoublepage
+
+\input{acronyms}
+\cleardoublepage
+
+\onehalfspacing
+\input{abstract}
+\cleardoublepage
+
+\initializeText
+\input{introduction}
+\input{chapter1}
+
+\input{chapter2}
+
+\input{conclusion}
+
+\initializeAppendix
+\input{appendix1}
+
+\singlespacing
+\printbibliography
+\printnoidxglossaries
+\cleardoublepage
+
+\addcontentsline{toc}{chapter}{Index}
+\printindex
+
+\end{document}
