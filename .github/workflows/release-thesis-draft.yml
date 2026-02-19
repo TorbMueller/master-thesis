@@ -52,7 +52,7 @@ jobs:
       - name: Compile LaTeX Document
         uses: xu-cheng/latex-action@v2
         with:
-          root_file: main.tex
+          root_file: master.tex
           working_directory: Thesis
 
       - name: Rename PDF with Date and DRF
@@ -61,7 +61,7 @@ jobs:
           DATE=$(date '+%Y-%m-%d')
           NEW_NAME="${DATE}-DRF-Thesis.pdf"
           mkdir artifacts
-          cp Thesis/out/main.pdf artifacts/$NEW_NAME
+          cp Thesis/out/master.pdf artifacts/$NEW_NAME
           echo "pdf_name=$NEW_NAME" >> $GITHUB_OUTPUT
 
       - name: Create Minor Release
